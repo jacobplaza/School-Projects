@@ -1,0 +1,63 @@
+---
+title: "Homework 3"
+author: "Jacob Plaza"
+date: "3/2/2022"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```
+QUESTION 1
+```
+
+question1 = read.table(file.choose(),header = T,sep = ",")
+
+X = question1$QUET
+Y = question1$SBP
+reg = lm(Y~X)
+reg
+
+residual = reg$residuals
+plot(residual)
+hist(residual)
+
+```
+QUESTION 3
+```
+
+
+question2 = read.table(file.choose(),header = T,sep = "")
+#a
+question2 = read.table(file.choose(),header = T,sep = "")
+
+Armstrength = question2$ARMSTRENGTH
+Dynamiclift = question2$DYNAMICLIFT
+
+
+plot(Armstrength, Dynamiclift)
+
+#b
+correlation=cor(Armstrength, Dynamiclift)
+correlation
+
+#c
+correlation_test = cor.test(Armstrength, Dynamiclift)
+correlation_test
+
+#d
+r_2 = correlation^2
+r_2
+
+fit = lm(Armstrength ~ Dynamiclift)
+nova = anova(fit)
+nova
+SSY = nova [1,2] + nova[2,2]
+SSE = nova [2,2]
+r_2_comp = (SSY-SSE)/SSY
+r_2_comp
+
