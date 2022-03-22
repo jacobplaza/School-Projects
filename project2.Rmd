@@ -1,0 +1,102 @@
+---
+title: "chapter 5"
+author: "Eze Izuchukwu"
+date: "2/2/2022"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+
+##question 1
+question1 = file.choose() #choose from your directory
+data1 = read.table(question1,header = TRUE,sep = ",")
+# sep = "," is used because we separated the values by comma (sep stand for separator) 
+
+
+AGE = 12*data1$YEARS + data1$MONTHS #defining the AGE in question
+
+vocab = cbind(data1,AGE) #cbind is used to join a column to another data of the same row length
+#b
+
+plot(vocab$AGE,vocab$VOC_SIZE)
+#c
+fit3 = lm(vocab$VOC_SIZE~vocab$AGE)
+lm(formula = vocab$VOC_SIZE ~ vocab$AGE)
+summary(fit)
+#finish up part c here
+
+#e 
+plot(vocab$AGE,vocab$VOC_SIZE)
+abline(lm(vocab$VOC_SIZE~vocab$AGE))
+#f
+
+vocabb = rbind(vocab,c(0,0,0,0)) #creating new one with rows of zero and here rbind is for binding two separate data with the same number of columns
+fit4 = lm(vocabb$VOC_SIZE~vocabb$AGE)
+lm(formula = vocabb$VOC_SIZE~vocabb$AGE)
+
+plot(vocabb$AGE,vocabb$VOC_SIZE)
+abline(lm(vocabb$VOC_SIZE~vocabb$AGE))
+
+
+#g
+new = data.frame(AGE=30)
+predict(fit4, data.frame(AGE = new))
+
+
+
+#question 3
+question3 = read.table(file.choose(),header = T,sep = ",")
+
+X = question3$QUET
+Y = question3$SBP
+X0 = seq(min(X),max(X),by = (max(X) - min(X))/10)
+xp = 3.4
+n=length(X)
+#3a
+fit = lm(Y~X)
+summary(fit)
+
+mse = sum(fit$residuals^2)/(n - 2)
+
+slopelow = fit$coefficients[2] -qt(0.975,n-2)*sqrt(mse)/(sd(X)*sqrt(n-1))
+slopehigh = fit$coefficients[2] +qt(0.975,n-2)*sqrt(mse)/(sd(X)*sqrt(n-1)) 
+
+ylow = fit$coefficients[1] + fit$coefficients[2]*X0 -
+  qt(0.975,n-2)*sqrt(mse)*sqrt(1/n + (X0 - mean(X))^2/((n-1)*var(X)))
+
+yhigh = fit$coefficients[1] + fit$coefficients[2]*X0 +qt(0.975,n-2)*sqrt(mse)*
+  sqrt(1/n + (X0 - mean(X))^2/((n-1)*var(X)))
+
+ypredlow = fit$coefficients[1] + fit$coefficients[2]*X0 -qt(0.975,n-2)*
+  sqrt(mse)*sqrt(1+ 1/n + (X0 - mean(X))^2/((n-1)*var(X)))
+
+ypredhigh =fit$coefficients[1] + fit$coefficients[2]*X0 +qt(0.975,n-2)*
+  sqrt(mse)*sqrt(1+ 1/n + (X0 - mean(X))^2/((n-1)*var(X)))
+
+plot(Y~X)
+abline(fit)
+lines(X0,ylow,col="red")
+lines(X0,yhigh,col="red")
+lines(X0,ypredlow,col="blue")
+lines(X0,ypredhigh,col="blue")
+
+yhat = fit$coefficients[1] + fit$coefficients[2]*xp
+ylowp = fit$coefficients[1] + fit$coefficients[2]*xp -
+  qt(0.975,n-2)*sqrt(mse)*sqrt(1/n + (xp - mean(X))^2/((n-1)*var(X)))
+yhighp = fit$coefficients[1] + fit$coefficients[2]*xp +qt(0.975,n-2)*
+  sqrt(mse)*sqrt(1/n + (xp - mean(X))^2/((n-1)*var(X)))
+
+ypredlowp = fit$coefficients[1] + fit$coefficients[2]*xp -qt(0.975,n-2)*
+  sqrt(mse)*sqrt(1+ 1/n + (xp - mean(X))^2/((n-1)*var(X)))
+ypredhighp =fit$coefficients[1] + fit$coefficients[2]*xp +qt(0.975,n-2)*
+  sqrt(mse)*sqrt(1+ 1/n + (xp - mean(X))^2/((n-1)*var(X)))
+
+new = data.frame(QUET=3.4)
+predict(fit, data.frame(QUET = new), interval = "prediction", level = 0.95)
+```
