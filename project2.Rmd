@@ -1,6 +1,6 @@
 ---
-title: "chapter 5"
-author: "Eze Izuchukwu"
+title: "Linear Regression Analysis"
+author: "Jacob Plaza"
 date: "2/2/2022"
 output:
   html_document:
