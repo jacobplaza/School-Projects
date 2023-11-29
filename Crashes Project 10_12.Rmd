@@ -1,0 +1,452 @@
+---
+title: "Crashes Project 10_12"
+author: "Paige Singla"
+date: "2023-10-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(sf)
+library(dplyr)
+library(tidygeocoder)
+library(tidyverse)
+```
+
+```{r}
+traffic <- read.csv("Average_Daily_Traffic_Counts.csv")
+crashes <- read.csv("Traffic_Crashes.csv")
+speed <- read.csv("Speed_Camera_Violations.csv")
+red <- read.csv("Red_Light_Camera_Violations.csv")
+```
+
+```{r}
+file <- "https://data.cityofchicago.org/resource/qqq8-j68g.geojson"
+chicago <- read_sf(file)
+class(chicago)
+st_crs(chicago)
+plot(chicago)
+
+
+grid <- chicago %>% 
+  st_make_grid(cellsize = c(.01,0.01), square = TRUE) %>% # grid of points
+  st_intersection(chicago) 
+
+plot(grid) #length 766
+```
+## Traffic
+
+```{r}
+df_traffic_sf <- st_as_sf(traffic,
+                  coords = c('Longitude','Latitude'), crs = st_crs(4326))
+
+
+within_traffic <- st_within(df_traffic_sf,grid)
+for (i in 1:length(within_traffic)){
+if (length(within_traffic[[i]]) == 0){within_traffic[[i]] <- -99}
+}
+
+
+(within_traffic)
+num_traffic <- (table(unlist(within_traffic)))
+(str(within_traffic))
+table(unlist(lapply(within_traffic, length)))
+
+
+```
+
+```{r}
+traffic2 <- traffic
+traffic2$grid_num <- unlist(within_traffic) #map every element to a cell number and group by cell number
+#length(unlist(within_traffic))
+grid_num <- seq(1,length(grid))
+
+df_end <- data.frame(grid_num) #create df with variable grid 1-1596
+
+
+traffic3 <- traffic2 %>% group_by(grid_num) %>% summarise(vehichle_volume = sum(Total.Passing.Vehicle.Volume))
+df_end <- merge(df_end, traffic3, by.x = "grid_num", by.y = "grid_num", all.x = TRUE)
+df_end
+#mean(is.na(df_end))
+```
+
+
+## red
+```{r}
+red2 <- red %>% filter(is.na(LATITUDE))
+head(red2)
+```
+```{r}
+red2 <- distinct(red2, CAMERA.ID, .keep_all = TRUE)
+lat_longs_red <- red2 %>%
+  mutate(addy = paste0(ADDRESS, ", Chicago, IL")) %>% 
+  geocode(addy, method = 'arcgis', lat = LATITUDE , long = LONGITUDE)
+
+lat_longs_red <- lat_longs_red[-20,] # this row had no camera id and one violation, it has an address that is associated with id 2054
+lat_longs_red_new <- subset(lat_longs_red, select = c('CAMERA.ID','LATITUDE...12','LONGITUDE...13'))#subset data to have just id lat long
+
+unique_red <- distinct(red, CAMERA.ID, .keep_all = TRUE)
+head(unique_red)
+
+unique_red <- merge(unique_red , lat_longs_red_new, by = 'CAMERA.ID', all.x = TRUE) # adding on the new latitude
+unique_red$LATITUDE[is.na(unique_red$LATITUDE)] <- unique_red$LATITUDE...12[is.na(unique_red$LATITUDE)] # merging latitude
+
+unique_red$LONGITUDE[is.na(unique_red$LONGITUDE)] <- unique_red$LONGITUDE...13[is.na(unique_red$LONGITUDE)] # merging longitude
+unique_red <- unique_red[-366,] # this row had no camera id and one violation, it has an address that is associated with id 2054
+unique_red <- unique_red[-359,]
+```
+
+```{r}
+
+df_red = na.omit(unique_red[1:365,c('LATITUDE','LONGITUDE')])
+df_red_sf <- st_as_sf(df_red,
+                  coords = c('LONGITUDE','LATITUDE'), crs = st_crs(4326))
+
+
+within_red <- st_within(df_red_sf,grid)
+
+(within_red)
+num_red <- (table(unlist(within_red)))
+(str(within_red))
+```
+
+map every element to a cell number and group by cell number
+create df with variable grid 1-1596 then merge within_red groupby grid for unique
+og file merge camera id group by grid number
+map from camera id to grid number left join in to our merged tata and merge by camera id, take merged data set and group by grid number but sum by violations
+
+```{r}
+unique_red$grid_num <- unlist(within_red) #map every element to a cell number and group by cell number
+
+
+
+red3 <- unique_red %>% group_by(grid_num) %>% summarise(num_red = n())
+#red4 <- red %>% group_by()
+df_end <- merge(df_end, red3, by.x = "grid_num", by.y = "grid_num", all.x = TRUE)
+df_end
+
+
+```
+
+
+*Red Total Violations*
+```{r}
+red_A <- red
+red_A <- merge(red_A , lat_longs_red_new, by = 'CAMERA.ID', all.x = TRUE) # adding on the new latitude
+red_A$LATITUDE[is.na(red_A$LATITUDE)] <- red_A$LATITUDE...12[is.na(red_A$LATITUDE)] # merging latitude
+
+red_A$LONGITUDE[is.na(red_A$LONGITUDE)] <- red_A$LONGITUDE...13[is.na(red_A$LONGITUDE)] # merging longitude
+```
+
+```{r}
+df_red_A = na.omit(red_A[1:878585,c('LATITUDE','LONGITUDE')])
+df_red_A_sf <- st_as_sf(df_red_A,
+                  coords = c('LONGITUDE','LATITUDE'), crs = st_crs(4326))
+
+
+within_red_A <- st_within(df_red_A_sf,grid)
+
+for (i in 1:length(within_red_A)){
+if (length(within_red_A[[i]]) == 0){within_red_A[[i]] <- -99}
+}
+
+(within_red_A)
+num_red_A <- (table(unlist(within_red_A)))
+(str(within_red_A))
+```
+
+
+```{r}
+red_A <- red_A[ -c(6,7,11:12) ]
+red_A <- red_A %>% drop_na(LONGITUDE)
+red_A$grid_num <- unlist(within_red_A) #map every element to a cell number and group by cell number
+
+
+
+red_B <- red_A %>% group_by(grid_num) %>% summarise(red_vio = sum(VIOLATIONS))
+#red4 <- red %>% group_by()
+df_end <- merge(df_end, red_B, by.x = "grid_num", by.y = "grid_num", all.x = TRUE)
+df_end
+```
+PAIGE ASK ABOUT THIS ERROR!!!!!!!!
+
+
+
+
+## SPEED
+```{r}
+speed2 <- speed %>% filter(is.na(LATITUDE))
+head(speed2)
+```
+
+```{r}
+speed2 <- distinct(speed2, CAMERA.ID, .keep_all = TRUE)
+lat_longs_speed <- speed2 %>%
+  mutate(addy = paste0(ADDRESS, ", Chicago, IL")) %>% 
+  geocode(addy, method = 'arcgis', lat = LATITUDE , long = LONGITUDE)
+
+lat_longs_speed_new <- subset(lat_longs_speed, select = c('CAMERA.ID','LATITUDE...11','LONGITUDE...12'))#subset data to have just id lat long
+
+unique_speed <- distinct(speed, CAMERA.ID, .keep_all = TRUE)
+head(unique_speed)
+
+unique_speed <- merge(unique_speed , lat_longs_speed_new, by = 'CAMERA.ID', all.x = TRUE) # adding on the new latitude and longitude
+unique_speed$LATITUDE[is.na(unique_speed$LATITUDE)] <- unique_speed$LATITUDE...11[is.na(unique_speed$LATITUDE)] # merging latitude
+unique_speed$LONGITUDE[is.na(unique_speed$LONGITUDE)] <- unique_speed$LONGITUDE...12[is.na(unique_speed$LONGITUDE)] # merging longitude
+
+```
+
+```{r}
+df_speed = na.omit(unique_speed[1:365,c('LATITUDE','LONGITUDE')])
+df_speed_sf <- st_as_sf(df_speed,
+                  coords = c('LONGITUDE','LATITUDE'), crs = st_crs(4326))
+
+
+within_speed <- st_within(df_speed_sf,grid)
+
+(within_speed)
+num_speed <- (table(unlist(within_speed)))
+(str(within_speed))
+```
+
+map every element to a cell number and group by cell number
+create df with variable grid 1-1596 then merge within_speed groupby grid for unique
+og file merge camera id group by grid number
+map from camera id to grid number left join in to our merged tata and merge by camera id, take merged data set and group by grid number but sum by violations
+
+```{r}
+unique_speed$grid_num <- within_speed #map every element to a cell number and group by cell number
+
+speed3 <- unique_speed %>% group_by(grid_num) %>% summarise(num_speed = n())
+df_end <- merge(df_end, speed3, by.x = "grid_num", by.y = "grid_num", all.x = TRUE)
+df_end
+```
+*Speed Total Violations*
+```{r}
+speed_A <- speed
+speed_A <- merge(speed_A , lat_longs_red_new, by = 'CAMERA.ID', all.x = TRUE) # adding on the new latitude
+speed_A$LATITUDE[is.na(speed_A$LATITUDE)] <- speed_A$LATITUDE...12[is.na(speed_A$LATITUDE)] # merging latitude
+
+speed_A$LONGITUDE[is.na(speed_A$LONGITUDE)] <- speed_A$LONGITUDE...13[is.na(speed_A$LONGITUDE)] # merging longitude
+```
+
+```{r}
+df_speed_A = na.omit(speed_A[1:878585,c('LATITUDE','LONGITUDE')])
+df_speed_A_sf <- st_as_sf(df_speed_A,
+                  coords = c('LONGITUDE','LATITUDE'), crs = st_crs(4326))
+
+
+within_speed_A <- st_within(df_speed_A_sf,grid)
+
+(within_speed_A) 
+num_speed_A <- (table(unlist(within_speed_A)))
+(str(within_speed_A))
+```
+
+```{r}
+speed_A <- speed_A[ -c(5,6,10:11) ]
+speed_A <- speed_A %>% drop_na(LONGITUDE)
+speed_A$grid_num <- unlist(within_speed_A) #map every element to a cell number and group by cell number
+
+
+
+speed_B <- speed_A %>% group_by(grid_num) %>% summarise(speed_vio = sum(VIOLATIONS))
+#red4 <- red %>% group_by()
+df_end <- merge(df_end, speed_B, by.x = "grid_num", by.y = "grid_num", all.x = TRUE)
+df_end
+```
+
+
+##CRASHES
+
+```{r}
+crashes2 <- (crashes)
+```
+
+```{r}
+df_crashes = na.omit(crashes2[1:759443,c('LATITUDE','LONGITUDE')])
+df_sf <- st_as_sf(df_crashes,
+                  coords = c('LONGITUDE','LATITUDE'), crs = st_crs(4326))
+
+
+within_crashes <- st_within(df_sf,grid)
+
+
+```
+
+map every element to a cell number and group by cell number
+create df with variable grid 1-1596 then merge within_crashes groupby grid for unique
+og file merge camera id group by grid number
+map from camera id to grid number left join in to our merged tata and merge by camera id, take merged data set and group by grid number but sum by violations
+
+```{r}
+df_crashes$grid_num <- within_crashes #map every element to a cell number and group by cell number
+
+crashes3 <- df_crashes %>% group_by(grid_num) %>% summarise(num_crashes = n())
+df_end <- merge(df_end, crashes3, by.x = "grid_num", by.y = "grid_num", all.x = TRUE)
+df_end <- df_end %>% replace(is.na(.),0)
+
+df_end
+
+# filtering by year 2019
+df_crashes$CRASH_DATE <- as.Date(df_crashes$CRASH_DATE, format =  "%m/%d/%Y %H:%M:%S")
+df_crashes$YEAR <- as.numeric((format(df_crashes$CRASH_DATE, "%Y")))
+crashes_2019 <- df_crashes %>% filter(YEAR == 2019)
+crashes_2019 <- df_crashes %>% group_by(grid_num) %>% summarise(num_crashes = n())
+df_2019 <- merge(df_2019, crashes_2019, by.x = "grid_num", by.y = "grid_num", all.x = TRUE)
+#df_2019 <- df_2019 %>% replace(is.na(.),0)
+
+df_2019
+```
+
+pick some cut off 
+build a model num crashes per day as a reponse of daily thingd year 2019
+
+do code exactly the same output is a record and cell, add cell number to dataset instead of counting with n = n() now we would do tot vio = sum(violations)
+
+average traffic or max, max
+
+probably poisson distribution in glm iid assumption for now
+
+link functions - look this up
+
+correlation between grids
+
+if camerea id 
+
+filtering by year 2019
+```{r}
+df_2019 <- data.frame(grid_num) 
+df_2019 <- merge(df_2019, traffic3, by.x = "grid_num", by.y = "grid_num", all.x = TRUE)
+```
+
+```{r}
+#df %>% filter(between(date_column, as.Date('2022-01-20'), as.Date('2022-02-20')))
+crashes_3 <- (crashes)
+crashes_3$CRASH_DATE <- as.Date(crashes_3$CRASH_DATE, format =  "%m/%d/%Y %H:%M:%S")
+crashes_3$CRASH_DATE <- as.numeric((format(crashes_3$CRASH_DATE, "%Y")))
+crashes_2019 <- crashes_3 %>% filter(CRASH_DATE == 2019)
+
+df_crashes_2019 = na.omit(crashes_2019[1:117762,c('LATITUDE','LONGITUDE')])
+df_sf_2019 <- st_as_sf(df_crashes_2019,
+                  coords = c('LONGITUDE','LATITUDE'), crs = st_crs(4326))
+
+
+within_crashes_2019 <- st_within(df_sf_2019,grid)
+```
+
+```{r}
+df_crashes_2019$grid_num <- within_crashes_2019 #map every element to a cell number and group by cell number
+
+df_crashes_2019_new <- df_crashes_2019 %>% group_by(grid_num) %>% summarise(num_crashes_2019 = n())
+df_2019 <- merge(df_2019, df_crashes_2019_new, by.x = "grid_num", by.y = "grid_num", all.x = TRUE)
+
+df_2019
+```
+*Red Total Violations 2019*
+
+```{r}
+red_B <- red
+red_B$VIOLATION.DATE <- as.Date(red_B$VIOLATION.DATE, format =  "%m/%d/%Y")
+red_B <- red_B %>% filter(between(VIOLATION.DATE, as.Date('2019-01-01'), as.Date('2019-12-31')))
+red_B_2019 <- red_B %>% group_by(CAMERA.ID) %>% summarise(num_days = n())
+
+red_B <- merge(red_B , red_B_2019, by = 'CAMERA.ID', all.x = TRUE)
+
+red_B_new <- subset(red_B, num_days > 300)
+```
+
+
+```{r}
+red_B_new <- merge(red_B_new , lat_longs_red_new, by = 'CAMERA.ID', all.x = TRUE) # adding on the new latitude
+red_B_new$LATITUDE[is.na(red_B_new$LATITUDE)] <- red_B_new$LATITUDE...12[is.na(red_B_new$LATITUDE)] # merging latitude
+
+red_B_new$LONGITUDE[is.na(red_B_new$LONGITUDE)] <- red_B_new$LONGITUDE...13[is.na(red_B_new$LONGITUDE)] # merging longitude
+```
+
+```{r}
+df_red_B_new = na.omit(red_B_new[1:71334,c('LATITUDE','LONGITUDE')])
+df_red_B_new_sf <- st_as_sf(df_red_B_new,
+                  coords = c('LONGITUDE','LATITUDE'), crs = st_crs(4326))
+
+
+within_red_B_new <- st_within(df_red_B_new_sf,grid)
+
+for (i in 1:length(within_red_B_new)){
+if (length(within_red_B_new[[i]]) == 0){within_red_B_new[[i]] <- -99}
+}
+
+(within_red_B_new)
+num_red_B_new <- (table(unlist(within_red_B_new)))
+(str(within_red_B_new))
+```
+
+```{r}
+red_B_new <- red_B_new[ -c(12:15) ]
+red_B_new <- red_B_new %>% drop_na(LONGITUDE)
+red_B_new$grid_num <- unlist(within_red_B_new) #map every element to a cell number and group by cell number
+
+
+
+red_C_new <- red_B_new %>% group_by(grid_num) %>% summarise(red_vio_2019 = sum(VIOLATIONS))
+#red4 <- red %>% group_by()
+df_2019 <- merge(df_2019, red_C_new, by.x = "grid_num", by.y = "grid_num", all.x = TRUE)
+df_2019
+```
+
+
+*Speed Total Violations 2019*
+```{r}
+speed_B <- speed
+speed_B$VIOLATION.DATE <- as.Date(speed_B$VIOLATION.DATE, format =  "%m/%d/%Y")
+speed_B <- speed_B %>% filter(between(VIOLATION.DATE, as.Date('2019-01-01'), as.Date('2019-12-31')))
+speed_B_2019 <- speed_B %>% group_by(CAMERA.ID) %>% summarise(num_days = n())
+
+speed_B <- merge(speed_B , speed_B_2019, by = 'CAMERA.ID', all.x = TRUE)
+
+speed_B_new <- subset(speed_B, num_days > 300)
+```
+
+
+
+```{r}
+df_speed_B_new = na.omit(speed_B_new[1:26924,c('LATITUDE','LONGITUDE')])
+df_speed_B_new_sf <- st_as_sf(df_speed_B_new,
+                  coords = c('LONGITUDE','LATITUDE'), crs = st_crs(4326))
+
+
+within_speed_B_new <- st_within(df_speed_B_new_sf,grid)
+
+for (i in 1:length(within_speed_B_new)){
+if (length(within_speed_B_new[[i]]) == 0){within_speed_B_new[[i]] <- -99}
+}
+
+(within_speed_B_new)
+num_speed_B_new <- (table(unlist(within_speed_B_new)))
+(str(within_speed_B_new))
+```
+
+```{r}
+speed_B_new <- speed_B_new[ -c(12:15) ]
+speed_B_new <- speed_B_new %>% drop_na(LONGITUDE)
+speed_B_new$grid_num <- unlist(within_speed_B_new) #map every element to a cell number and group by cell number
+
+
+
+speed_C_new <- speed_B_new %>% group_by(grid_num) %>% summarise(speed_vio_2019 = sum(VIOLATIONS))
+#speed4 <- speed %>% group_by()
+df_2019 <- merge(df_2019, speed_C_new, by.x = "grid_num", by.y = "grid_num", all.x = TRUE)
+df_2019 <- df_2019 %>% replace(is.na(.),0)
+df_2019
+```
+
+
+*MODEL*
+```{r}
+poisson_mod <- glm(num_crashes_2019 ~ red_vio_2019 + speed_vio_2019 + vehichle_volume, family = "poisson", data = df_2019)
+summary(poisson_mod)
+```
+

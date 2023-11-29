@@ -1,0 +1,100 @@
+---
+title: "Crashes Project SF"
+author: "Paige Singla"
+date: "2023-10-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(sf)
+library(dplyr)
+```
+
+```{r}
+traffic <- read.csv("Average_Daily_Traffic_Counts.csv")
+crashes <- read.csv("Traffic_Crashes.csv")
+speed <- read.csv("Speed_Camera_Violations.csv")
+red <- read.csv("Red_Light_Camera_Violations.csv")
+```
+
+## SF for Crashes
+```{r}
+sf <- st_bbox(c(xmin = -87.93619,xmax = -87.52459, ymax = 42.02278, ymin = 41.64467), crs = st_crs(4326))
+sf
+
+grid <- st_make_grid(sf,cellsize = c(.01,.01))
+plot(grid)
+
+df = na.omit(crashes[1:500,c('LATITUDE','LONGITUDE')])
+df_sf <- st_as_sf(df,
+                  coords = c('LONGITUDE','LATITUDE'), crs = st_crs(4326))
+
+
+within <- st_within(df_sf,grid)
+
+(within)
+(table(unlist(within)))
+(str(within))
+```
+
+## SF for unique Red light cameras
+```{r}
+# making the unique data set
+omit_red <- na.omit(red)
+unique_red <- distinct(omit_red, CAMERA.ID, .keep_all = TRUE)
+head(unique_red)
+```
+
+```{r}
+# sf grid
+sf <- st_bbox(c(xmin = -87.93619,xmax = -87.52459, ymax = 42.02278, ymin = 41.64467), crs = st_crs(4326))
+sf
+
+grid <- st_make_grid(sf,cellsize = c(.01,.01))
+plot(grid)
+
+df_red = na.omit(unique_red[1:346,c('LATITUDE','LONGITUDE')])
+df_red_sf <- st_as_sf(df_red,
+                  coords = c('LONGITUDE','LATITUDE'), crs = st_crs(4326))
+
+
+within_red <- st_within(df_red_sf,grid)
+
+(within_red)
+(table(unlist(within_red)))
+(str(within_red))
+```
+
+## SF for unique Speed cameras
+```{r}
+# making the unique data set
+omit_speed <- na.omit(speed)
+unique_speed <- distinct(omit_speed, CAMERA.ID, .keep_all = TRUE)
+head(unique_speed)
+```
+
+```{r}
+# sf grid
+sf <- st_bbox(c(xmin = -87.93619,xmax = -87.52459, ymax = 42.02278, ymin = 41.64467), crs = st_crs(4326))
+sf
+
+grid <- st_make_grid(sf,cellsize = c(.01,.01))
+plot(grid)
+
+df_speed = na.omit(unique_speed[1:177,c('LATITUDE','LONGITUDE')])
+df_speed_sf <- st_as_sf(df_speed,
+                  coords = c('LONGITUDE','LATITUDE'), crs = st_crs(4326))
+
+
+within_speed <- st_within(df_speed_sf,grid)
+
+(within_speed)
+(table(unlist(within_speed)))
+(str(within_speed))
+```
+
+
