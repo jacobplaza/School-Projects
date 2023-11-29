@@ -1,0 +1,24 @@
+---
+title: "Homework 5"
+author: "Jacob Plaza"
+date: "2023-03-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+students = read.table('/home/bultok/Documents/School/Senior Year/Spring/Stat 310/Datasets/students.dat', header=T)
+
+
+### 5.4 
+a. Show all steps of a model-selection method such as purposeful selection for choos-
+ing a model for predicting abor, when the potential explanatory variables are ideol,
+relig, news, hsgpa, and gender.
+
+
+```{r}
+
+```
+

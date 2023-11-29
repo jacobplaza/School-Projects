@@ -1,0 +1,225 @@
+---
+title: "Homework 4"
+author: "Jacob Plaza"
+date: "2023-02-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Question 4.4 
+
+Since β̂ = 0.397, the estimated odds of heart disease multiplies by exp(0.397), or by a factor of 1.487356 for each increase in snoring level. 
+
+```{r}
+exp(0.397)
+```
+
+### Question 8
+#### B
+Using x = weight as the sole explanatory variable
+
+```{r}
+Crab = read.table("/home/bultok/Documents/School/Senior Year/Spring/Stat 310/Datasets/Crabs.dat", header = T)
+fit <- glm(y ~ weight, family=binomial, data=Crab)
+
+library(mfx)
+logitmfx(fit, atmean=FALSE, data=Crab)
+```
+The average rate of change is 0.3495 in the estimated
+probability of a satellite per 0.10 kg increase in weight. 
+
+
+#### C
+
+
+```{r}
+prop = sum(Crab$y)/nrow(Crab)
+predicted = as.numeric(fitted(fit) > prop)
+xtabs(~ Crab$y + predicted)
+
+sensitivity = 68 / (68 + 43)
+specificity = 45 / (45 + 17)
+sensitivity
+specificity
+```
+The sensitivity is equal to 0.6126126, which means that the model is able to, for the most part, designate whether a crab will have a satellite based off their weight. The specificity is equal to 0.7258006, which is also quite high, so the model is able to more or less designate whether or not a crab will have a satellite based off their weight. 
+
+
+#### D
+```{r}
+library(pROC)
+rocplot = roc(y ~ fitted(fit), data=Crab)
+auc(rocplot)
+plot.roc(rocplot, legacy.axes=TRUE)
+```
+The area under the ROC curve is 0.7379. This area functions to summarize the predictive power of the model, basically summarizing all the possible cutoff values. So the greater the area under the curve, the more predictive power it has; using only weight as our explanatory variable the area is at a moderately high value, so this variable has decent explanatory power within a logistic regression model. 
+
+
+
+### Question 9 
+
+#### A
+```{r}
+fit_9 <- glm(y ~ factor(color), family=binomial, data=Crab)
+fit_9
+
+exp(1.0986)
+exp(-0.7622)
+```
+
+The equation is logit[P(Y = 1)] =  1.0986 - 0.1226(c2) - 0.7309 (c3) - 1.8608 (c4)
+
+So, if we use it for the first color, that would mean that all the other colors are equal to zero. Plugging in those numbers, we would get
+
+logit[P(Y=1)] = 1.0986 
+
+For the fourth color: 
+logit[P(Y=1)] = 1.0986 - 1.8608(1) = −0.7622
+
+So, a crab of the first color has an estimated exp(1.0986) = 2.999963 times the odds of having a satellite, while a crab of the fourth color has 0.4666387 times the odds of having a satellite. 
+
+
+
+
+#### B
+```{r}
+library(car)
+Anova(fit_9)
+```
+At a p-value of 0.003, we would reject the null hypothesis; color does have an effect on the output of the model. 
+
+#### C
+```{r}
+fit_9c = glm(y ~ color, family=binomial, data=Crab)
+Anova(fit_9c)
+
+fit_9c
+
+exp(-0.7147)
+```
+
+The prediction equation is logit[P( Y = 1)] = 2.3665 - 0.7147c.
+
+For every one-category increase in color darkness, the estimated odds of a satellite mul-
+tiply by exp(−0.7147) = 0.4893.
+
+Again, looking at the p-value of the likelihood ratio test, we would reject the null hypothesis; color does have an effect. 
+
+#### D
+If the model fits well, then it is advantageous because the output is easier to interpret, and testing for the effect of the variable are more powerful because it only has a single parameter. 
+
+However, if the model does not fit well, then you might be compelled to gloss over the parameter when it does actually have an effect that should be modeled by treating the orindal variable as a factor. 
+
+
+#### E
+```{r}
+fit_9e = glm(y ~ weight + color, family=binomial, data=Crab)
+```
+
+### 12 
+```{r}
+mbti = read.table("/home/bultok/Documents/School/Senior Year/Spring/Stat 310/Datasets/MBTI.dat", header = T)
+
+
+fit_12 = 
+```
+
+
+### 16
+
+#### A
+```{r}
+SoreThroat = read.table("/home/bultok/Documents/School/Senior Year/Spring/Stat 310/Datasets/SoreThroat", header = T)
+
+fit_16a = glm(Y ~ D + T + D:T, family=binomial, data=SoreThroat)
+
+
+
+fit_16a
+exp(0.103088)
+exp(0.02848)
+```
+The equation is 
+
+##### For when t = 1:
+logit[P(Y=1)] = −4.42245 + 0.103088x1  
+
+When t = 1, for every increase in the minute of the surgery, the estimated odds of a sore throat mul-
+tiply by exp(0.103088) = 1.108589
+
+##### For when t = 0:
+logit[P(Y=1)] = 0.04979 + 0.02848x1
+
+When t = 1, for every increase in the minute of the surgery, the estimated odds of a sore throat mul-
+tiply by exp(0.02848) = 1.028889
+
+So, when there is general anesthesia, there is a higher chance of having a sore throat. 
+
+
+
+#### B
+```{r}
+fit_16b = glm(Y ~ D + T, family=binomial, data=SoreThroat)
+
+cor_a = cor(SoreThroat$Y, fitted(fit_16a))
+cor_b = cor(SoreThroat$Y, fitted(fit_16b))
+
+cor_a
+cor_b
+
+```
+
+The r value for the model with interaction terms is 0.6599, while the r value for the model without interaction terms is 0.6529. So, the model with interaction terms has slightly better predictive power.
+
+### 4.19 
+#### a
+```{r}
+fit_19a = glm(y ~ width + factor(color) + width:factor(color), family=binomial, data=Crab)
+
+fit_19a
+library(car)
+Anova(fit_19a)
+
+fit_19b = glm(y ~ width + factor(color), family=binomial, data=Crab)
+
+
+
+cor(Crab$y, fitted(fit_19a))
+
+cor(Crab$y, fitted(fit_19b))
+```
+For c1: 
+
+logit[P̂ (Y = 1)]  =-1.75261 + 0.10600(width)
+
+For c2: 
+
+logit[P̂ (Y = 1)]  = −10.041 + 0.41887(width)
+
+For c3:
+
+logit[P̂ (Y = 1)]  = −21.5180 6+ 0.85837(width)
+
+For c4: 
+
+logit[P̂ (Y = 1)] = −5.85383 +0.20043(width)
+
+
+#### B
+According to the anova results, the interaction term has a p-value of 0.22358. So we would conclude that the model does actually fit better without interaction terms; the simpler model is better. Furthermore, the R value for the model with interaction terms is slightly higher, with a value of 0.4708 as opposed to 0.45221, which suggests that it has more predictive power - which makes sense since it has more terms. So, potentially it would make sense to see if a function which treats the color variable as numerical, without the factor, would fit better.
+
+
+### 21
+Sensitivity: 96/(96+15) = 0.8649
+
+Specificity: 31/(31+31) = 0.5
+
+```{r}
+96 / (96 + 15)
+
+31 / (31 + 31)
+```
+The table was constructed by finding the data which shows which crabs actually have satellites, and then taking the values that the model will predict for the crabs, and comparing them. So, there are 96 crabs which were predicted to have satellites and actually did, 15 predicted as having satellites but actually did not, 31 actually didn't have them but were predicted to have them,and 31 predicted as not having them when really they did.

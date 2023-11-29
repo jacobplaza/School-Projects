@@ -1,0 +1,47 @@
+---
+title: "Homework 3"
+author: "Jacob Plaza"
+date: "2023-02-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+crab <- read.table("/home/bultok/Documents/School/Senior Year/Spring/Stat 310/Datasets/Crabs.dat", header = T)
+
+linear_prob = lm(y ~ weight, data = crab)
+linear_prob
+
+
+log.reg = glm(y ~ weight, family = binomial (link = logit), data = crab)
+log.reg
+
+val = (exp(-3.695 + (1.815 * 5.20))) / (1 + exp(-3.695 + 1.815 * 5.20))
+val
+
+
+
+pos = -0.5901 + 1.96 * (0.1564)
+neg = -0.5901 - 1.96 * (0.1564)
+
+pos
+neg
+
+
+
+y <- c(5,18,19,25,7,7,2); n <- c(6,21,20,36,17,18,3)
+x <- c(1,2,3,4,5,6,7)
+fit <- glm(y/n ~ x, family=binomial(link=logit), weights=n)
+
+install.packages("car")
+library(car)
+Anova(fit)
+
+
+
+
+poisson = glm(y~weight, family=poisson(link=log), data = crab)
+summary(poisson)
+
+

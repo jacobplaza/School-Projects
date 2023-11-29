@@ -1,0 +1,42 @@
+---
+title: "Homework 7"
+author: "Jacob Plaza"
+date: "2023-04-18"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Apply the McNemar test to Table 8.3 on smoking and birthweight. Interpret.
+
+```{r}
+
+
+smoke = matrix(c(159,8,22,14), nrow =2)
+mcnemar.test(smoke, correct = FALSE)
+```
+
+X^2 value is 6.53, and the p-value is equal to 0.01. So we would reject the null hypothesis. Therefore, low birth rate cases are more likely to have mothers who smoke than normal weight controls. 
+
+### 8.3 Explain the diﬀerence between B for marginal model (8.2) and B for subject-speciﬁc model (8.3). Illustrate with Table 8.1 on helping the environment.
+
+
+For a marginal model, B is the log odds ratio (log(p/1-p)) comparing marginal distributions. For a subject specific model, B is conditional on the subject, which means that the odds of success for yi1 are exp(B) multiplied by the odds of success for yi2. 
+
+### 8.4 Estimate exp(B) and explain why the estimate is valid even though the study observed diabetes, conditional on MI status.
+
+```{r}
+oddsratio = (9/37)/(16/82)
+oddsratio
+```
+
+B would be the log odds ratio, so after exponentiating, the parameter estimate would just be 1.246622.
+
+
+### 8.6 Explain the following analogy: The McNemar test is to binary response variables as the paired-diﬀerence t test is to normally distributed response variables.
+
+A McNemar test is used when you have matched-pairs data with a binary response. You use it when you want to compare two dependent proportions. A paired difference t-test is a little different, since it examines the mean difference between a pair of measurements. 

@@ -1,0 +1,73 @@
+---
+title: "Homework 6"
+author: "Jacob Plaza"
+date: "2023-04-06"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+##### 6.2: 
+```{r}
+exp(-0.1101)
+```
+
+The odds of the primary food choice being either invertebrate or other in relation to length is 0.8957.
+
+#### 6.4:
+
+##### a) 
+```{r}
+exp(-0.1051)
+```
+The odds of responding undecided rather than no is 0.9 times that for females, adjusting for race. 
+
+##### b)
+The odds of respond undecided rather than yes is 1.368205 times that for females, adjusting for race. 
+```{r}
+Afterlife = read.table("/home/bultok/Documents/School/Senior Year/Spring/Stat 310/Datasets/Afterlife.dat", header = T)
+library(VGAM)
+fit <- vglm(cbind(yes,undecided,no) ~ gender + race, family=multinomial(refLevel = 1), data=Afterlife)
+summary(fit)
+exp(0.3135)
+```
+
+#### 6.5
+
+a. Summarize each partial eﬀect by indicating whether subjects tend to be more sat-
+isﬁed or less satisﬁed, as (i) x1 , (ii) x2 , (iii) x3 , increases.
+
+i) as x1 increases the response increase, satisfaction would increase as employees are paid more in relation to others in similar positions
+
+ii) as x2 increases the response decreases, job satisfaction would decrease as employees have less freedom to choose how to do their jobs
+
+iii) as x3 increases the response decreases, job satisfaction would decrease as employees have a less productive work environment
+
+b.
+
+X1 should have the highest value to maximize satisfaction, since it has a positive relationship with the response; so x1 = 4. X2 and x3 should both be 1 to minimize their negative relationship with job satisfaction. 
+
+
+
+#### 6.6 
+
+Since the coefficient estimates of both incomes are negative, we can say that increasing the income of a family will decrease the odds of being unhappy in comparison to the baseline very happy family by about 22%. On the other hand, an increase in income for a family which already makes average income only decreases the odds of being unhappy in comparison to the baseline very happy family by about 10%. 
+
+At y1, the unhappy category, 3.6% below average income families are unhappy, 3% of the average income families are in this category, and 2.5% of the above average income families are predicted to be in this category. 
+
+At y2, the happy category, it is predicted that 38% of the below average income families will be happy, 36% of the average income and 34% of the above average income families are predicted to be in this category as well. 
+
+At y3, the very happy  category, 59% of the below average families are predicted to be very happy, 61% of the average income families, and 64% of the above average income families are predicted to be in this category as well. 
+
+So, more of the above average income families are predicted to be very happy than the below average income families, and more of the below average income families are predicted to be unhappy than the average and above average income families. 
+
+```{r}
+install.packages("stringi")
+update.packages()
+```
+
+
+
